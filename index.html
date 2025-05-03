@@ -1,1 +1,194 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .habit-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .habit-input input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .habit-input button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .habit-input button:hover {
+            background-color: #218838;
+        }
+        .habit-list {
+            list-style: none;
+            padding: 0;
+        }
+        .habit-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .habit-item.completed {
+            background-color: #d4edda;
+            text-decoration: line-through;
+        }
+        .habit-item button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .complete-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        .complete-btn:hover {
+            background-color: #0056b3;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Habit Tracker</h1>
+        <div class="habit-input">
+            <input type="text" id="habitInput" placeholder="Enter a new habit">
+            <button onclick="addHabit()">Add Habit</button>
+        </div>
+        <ul class="habit-list" id="habitList"></ul>
+    </div>
+
+    <script>
+        // Load habits from localStorage when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHabits();
+        });
+
+        function addHabit() {
+            const habitInput = document.getElementById('habitInput');
+            const habitText = habitInput.value.trim();
+
+            if (habitText === '') {
+                alert('Please enter a habit!');
+                return;
+            }
+
+            const habit = {
+                id: Date.now(),
+                text: habitText,
+                completed: false
+            };
+
+            // Save habit to localStorage
+            saveHabit(habit);
+
+            // Add habit to the list
+            renderHabit(habit);
+
+            // Clear input
+            habitInput.value = '';
+        }
+
+        function renderHabit(habit) {
+            const habitList = document.getElementById('habitList');
+            const habitItem = document.createElement('li');
+            habitItem.className = 'habit-item';
+            habitItem.dataset.id = habit.id;
+            if (habit.completed) {
+                habitItem.classList.add('completed');
+            }
+
+            habitItem.innerHTML = `
+                <span>${habit.text}</span>
+                <div>
+                    <button class="complete-btn" onclick="toggleComplete(${habit.id})">
+                        ${habit.completed ? 'Undo' : 'Complete'}
+                    </button>
+                    <button class="delete-btn" onclick="deleteHabit(${habit.id})">Delete</button>
+                </div>
+            `;
+
+            habitList.appendChild(habitItem);
+        }
+
+        function saveHabit(habit) {
+            let habits = getHabits();
+            habits.push(habit);
+            localStorage.setItem('habits', JSON.stringify(habits));
+        }
+
+        function getHabits() {
+            return JSON.parse(localStorage.getItem('habits')) || [];
+        }
+
+        function loadHabits() {
+            const habits = getHabits();
+            habits.forEach(habit => renderHabit(habit));
+        }
+
+        function toggleComplete(id) {
+            let habits = getHabits();
+            habits = habits.map(habit => {
+                if (habit.id === id) {
+                    habit.completed = !habit.completed;
+                }
+                return habit;
+            });
+            localStorage.setItem('habits', JSON.stringify(habits));
+
+            // Update the UI
+            const habitItem = document.querySelector(`.habit-item[data-id="${id}"]`);
+            habitItem.classList.toggle('completed');
+            const completeBtn = habitItem.querySelector('.complete-btn');
+            completeBtn.textContent = habitItem.classList.contains('completed') ? 'Undo' : 'Complete';
+        }
+
+        function deleteHabit(id) {
+            let habits = getHabits();
+            habits = habits.filter(habit => habit.id !== id);
+            localStorage.setItem('habits', JSON.stringify(habits));
+
+            // Remove from UI
+            const habitItem = document.querySelector(`.habit-item[data-id="${id}"]`);
+            habitItem.remove();
+        }
+    </script>
+</body>
+</html>
